@@ -7,18 +7,58 @@ import img2 from './assets/6a6208b073d1d58f8cc0.jpg'
 import imgEvt from './assets/lich.jpg'
 import mp3 from './assets/bgaudio.mp3'
 import imgTochu from './assets/tochuc2.png'
+import { ref, push, set, onValue } from 'firebase/database'
+import { database } from './firebaseConfig' // Import Firebase Database
 
 function App() {
   const [open, setOpen] = useState<boolean>(false)
   const [play, setPlay] = useState<boolean>(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [greeting, setGreeting] = useState('')
+  const [senderName, setSenderName] = useState('')
+  const [greetingsList, setGreetingsList] = useState<any>([])
 
   useEffect(() => {
     const bgAudio = new Audio(mp3)
     audioRef.current = bgAudio
+
     return () => {
       bgAudio.pause()
     }
+  }, [])
+
+  // Xử lý khi người dùng submit lời chúc
+  const handleSubmit = (e: any) => {
+    e.preventDefault()
+
+    if (greeting.trim()) {
+      // Tạo một key mới cho lời chúc
+      const newGreetingKey = push(ref(database, 'greetings')).key
+
+      // Lưu lời chúc cùng với tên người gửi vào Firebase
+      set(ref(database, 'greetings/' + newGreetingKey), {
+        id: newGreetingKey,
+        message: greeting,
+        sender: senderName,
+      })
+      window.alert('Đã gửi lời chúc <3')
+      // Xóa nội dung input sau khi gửi
+      setGreeting('')
+      setSenderName('')
+    }
+  }
+
+  // Lấy dữ liệu lời chúc từ Firebase
+  useEffect(() => {
+    const greetingsRef = ref(database, 'greetings')
+
+    onValue(greetingsRef, (snapshot) => {
+      const data = snapshot.val()
+      if (data) {
+        const greetingsArray = Object.values(data)
+        setGreetingsList(greetingsArray.reverse())
+      }
+    })
   }, [])
 
   useEffect(() => {
@@ -137,13 +177,13 @@ function App() {
         </div>
         <div className="pt-5 lg:pt-[100px]" id="history">
           <span className="h-[100px] flex justify-center items-center text-[30px]">Lịch sử hình thành</span>
-          <ul className="flex flex-col gap-10 px-20">
+          <ul className="flex flex-col gap-10 px-5 lg:px-20">
             <li className="lg:h-[300px] w-full">
               <div className="bg-primary w-full lg:w-2/3 h-full rounded-xl shadow-xl border-[1px] border-solid border-black overflow-hidden flex flex-col lg:flex-row-reverse">
                 <img src={img1} alt="" className="w-full h-auto lg:h-full lg:w-auto object-cover" />
                 <div className="py-10 flex flex-col items-center px-5">
                   <p className="text-[20px] lg:text-[30px] font-bold">Thuở ban đầu còn rất đơn sơ</p>
-                  <p className="text-justify lg:text-[22px]">
+                  <p className="text-center lg:text-[22px]">
                     Xứ đoàn TNTT ban đầu gồm 174 thành viên thuộc các ngành Ấu Nhi,Thiếu Nhi ,Nghĩa Sĩ và Dự Trưởng
                   </p>
                 </div>
@@ -155,7 +195,7 @@ function App() {
 
                 <div className="py-10 flex flex-col items-center px-5">
                   <p className="text-[20px] lg:text-[30px] font-bold">Vị cha già đáng kính</p>
-                  <p className="text-justify lg:text-[22px]">
+                  <p className="text-center lg:text-[22px]">
                     Cha tuyên úy của xứ đoàn chúng con là cha Fx.As Nguyễn Tiến Tám . Người đã nâng niu dìu dắt chúng
                     con từ những bước chân đầu tiên
                   </p>
@@ -168,7 +208,7 @@ function App() {
 
                 <div className="py-10 flex flex-col items-center px-5">
                   <p className="text-[20px] lg:text-[30px] font-bold">Sự phát triển</p>
-                  <p className="text-justify lg:text-[22px]">
+                  <p className="text-center lg:text-[22px]">
                     Hiện nay xứ đoàn ngày một phát triển lớn mạnh thêm , số đoàn viên đã tăng lên nhiều , xứ đoàn cũng
                     có thêm 3 ngành nữa là Chiên Con, Hiệp Sĩ và Huynh Trưởng
                   </p>
@@ -182,19 +222,19 @@ function App() {
           <img src={imgTochu} alt="Hình ảnh tổ chức xứ đoàn" className="w-full h-auto object-cover" />
         </div>
         <div className="flex justify-center w-full h-auto pt-20" id="thankyou">
-          <div className=" flex flex-col items-center w-2/3 p-5 lg:p-20 bg-[#FAF3E0] ">
+          <div className=" flex flex-col items-center mx-3 p-5 lg:p-20 bg-[#FAF3E0] ">
             <p className="text-[30px] text-center rounded-xl">Lời xin lỗi</p>
-            <p className=" text-justify">
+            <p className=" text-start indent-5">
               Chúng con xin lỗi quý cha , quý tu sĩ , ban HĐMV giáo xứ , cùng các đấng bậc đã bỏ thời gian , tâm huyết
               ra để hướng dẫn đồng hành cùng chúng con mà có đôi lúc chúng con ngỗ nghịch , không vâng lời làm mọi người
               buồn .Chúng con xin hứa sẽ cố gắng thay đổi để đưa Xứ đoàn ngày càng thăng tiến hơn
             </p>
           </div>
         </div>
-        <div className="mt-[80px]  bg-center text-white bg-no-repeat bg-cover object-cover w-full bg-[url('https://png.pngtree.com/thumb_back/fh260/background/20230527/pngtree-small-girl-standing-in-front-of-a-window-hand-in-prayer-image_2694007.jpg')]">
-          <div className="flex flex-col p-5 lg:p-20">
+        <div className="mt-[80px] lg:px-10  bg-center text-white bg-no-repeat bg-cover object-cover w-full bg-[url('https://png.pngtree.com/thumb_back/fh260/background/20230527/pngtree-small-girl-standing-in-front-of-a-window-hand-in-prayer-image_2694007.jpg')]">
+          <div className="flex flex-col p-5 lg:p-20 bg-[rgba(0,0,0,0.3)]">
             <p className="text-[26px] lg:text-[36px] text-center">Lời cầu nguyện</p>
-            <p className="indent-6 mt-5 px-20 text-justify">
+            <p className="indent-6 mt-5 px-5 lg:px-20 text-start">
               "Nguyện xin Thiên Chúa qua lời cầu bầu của Thánh quan thầy Phanxico Assisi ban xuống trên quý cha , quý tu
               sĩ nam nữ , quý ân nhân thân nhân để mọi người tiếp tục đồng hành và bảo ban chúng con . Xin cho xứ đoàn
               chúng con ngày càng phát triển ,ngày càng lớn mạnh trong tình yêu thương của Thiên Chúa , Mẹ Maria và
@@ -204,17 +244,62 @@ function App() {
             </p>
           </div>
         </div>
-        <div className="flex justify-center items-center flex-col pt-[100px]" id="events">
+        <div className="flex justify-center items-center flex-col pt-[100px] px-2" id="events">
           <p className="text-[30px] lg:text-[40px]">Chương trình ngày lễ</p>
-          <div className="shadow-xl flex flex-col mt-[30px] items-center rounded-lg overflow-hidden px-20">
+          <div className=" shadow-xl flex flex-col mt-[30px] items-center rounded-lg overflow-hidden lg:px-20 pb-10 border-[1px] border-solid border-black">
             <img src={imgEvt} alt="" className="w-full object-cover" />
           </div>
         </div>
+        <div className="flex flex-col w-full pt-20 lg:flex-row p-3 lg:p-20 bg-red-200 gap-10 bg-no-repeat bg-center bg-cover h-full]">
+          <div className="flex-col flex-1 items-center rounded-xl overflow-hidden border-[4px] border-solid border-red-500">
+            <form onSubmit={handleSubmit} className=" flex flex-col bg-white p-10 gap-3">
+              <h1 className="text-center text-[25px] lg:text-[36px] font-bold text-amber-700">
+                Gửi lời chúc cho xứ đoàn
+              </h1>
+              <span className="lg:text-[24px]">Nhập họ và tên</span>
+              <input
+                type="text"
+                value={senderName}
+                className="border-[2px] border-solid border-gray-200 h-10 lg:h-[60px] outline-none "
+                onChange={(e) => setSenderName(e.target.value)}
+              />
+              <br />
+              <span className="lg:text-[24px]">Nhập lời chúc</span>
+              <textarea
+                value={greeting}
+                onChange={(e) => setGreeting(e.target.value)}
+                required
+                className="border-[2px] border-solid border-gray-200 h-20 outline-none lg:h-[200px]"
+              />
+              <br />
+              <button
+                type="submit"
+                className=" bg-amber-700 p-2 lg:px-10 lg:py-5 mx-auto my-auto rounded-2xl hover:bg-green-500 font-bold  uppercase">
+                Gửi lời chúc
+              </button>
+            </form>
+          </div>
+          <div className="flex-1 border-[4px] border-solid border-red-500 bg-white rounded-2xl overflow-hidden flex flex-col ">
+            <h2 className="p-10 text-center  text-amber-700 text-[26px] lg:text-[36px] font-bold">
+              Lời chúc cho xứ đoàn
+            </h2>
+            <ul className="overflow-auto h-[500px]">
+              {greetingsList.map((greet: any, index: number) => (
+                <li key={greet.id} className={`flex flex-col p-5 ${index % 2 == 0 ? 'bg-[#fff0f1]' : 'bg-white'}`}>
+                  <strong className="text-[22px]">{greet.sender ? greet.sender : 'Ẩn danh'}</strong>
+                  <p className="text-wrap">{greet.message}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
         <span
+          id="play_button"
           className="fixed z-10 bottom-7 left-6  rounded-[50%] bg-green-400 h-10 w-10 flex justify-center items-center"
           onClick={() => {
             if (!play) {
               audioRef.current!.play()
+              audioRef.current!.loop = true
             } else {
               audioRef.current!.pause()
             }
@@ -223,7 +308,7 @@ function App() {
           <FontAwesomeIcon icon={!play ? faPlay : faPause} size="1x" />
         </span>
       </main>
-      <footer className="h-[80px] w-full bg-primaryTo mt-20 font-bold uppercase text-textColor flex justify-center items-center text-[20px]">
+      <footer className="h-[80px] w-full bg-primaryTo mt-20 font-bold uppercase text-textColor flex justify-center items-center text-[20px] py-2">
         <FontAwesomeIcon icon={faHeart} size="1x" />
         <p className="mx-5 text-[15px] text-wrap text-center">XỨ ĐOÀN PHANXICO ASSISI GIÁO XỨ THÂN THƯỢNG </p>
         <FontAwesomeIcon icon={faHeart} size="1x" />
